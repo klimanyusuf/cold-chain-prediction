@@ -1,0 +1,19 @@
+﻿name: Keep Streamlit App Alive
+
+on:
+  schedule:
+    # Runs every 25 minutes
+    - cron: '*/25 * * * *'
+  workflow_dispatch:
+
+jobs:
+  ping-app:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Send keep-alive request
+        run: |
+          echo "Keeping dashboard alive at 04/27/2026 21:43:04"
+          curl -s -o /dev/null -w "Status: %{http_code}\n" \
+            --max-time 30 \
+            https://cold-chain-prediction.streamlit.app/
