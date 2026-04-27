@@ -1,0 +1,33 @@
+﻿# Python
+__pycache__/
+*.py[cod]
+*.so
+.Python
+venv/
+env/
+.venv/
+
+# Generated data (too large for GitHub)
+data/raw/
+data/processed/
+
+# Trained models (too large for GitHub)
+models/*.pkl
+models/*.h5
+models/*.json
+
+# Logs
+logs/
+*.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# PowerShell script (optional - remove if you want to include)
+update_project.ps1
