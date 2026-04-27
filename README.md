@@ -16,3 +16,5 @@ Terminal 1: python scripts/01_generate_data.py, python scripts/02_preprocess_dat
 Terminal 2: python scripts/05_api.py
 
 Terminal 3: streamlit run scripts/06_dashboard.py
+
+### Live app url: https://cold-chain-prediction.streamlit.app/
