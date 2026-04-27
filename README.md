@@ -12,5 +12,7 @@ git clone https//......
 
 ## Run orderly
 Terminal 1: python scripts/01_generate_data.py, 02_preprocess_data.py , 03_train_xgboost.py, and then 04_train_lstm.py
+
 Terminal 2: python scripts/05_api.py
+
 Terminal 3: streamlit run scripts/06_dashboard.py
