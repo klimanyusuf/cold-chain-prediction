@@ -8,13 +8,13 @@ env/
 .venv/
 
 # Generated data (too large for GitHub)
-data/raw/
-data/processed/
+# data/raw/
+# data/processed/
 
 # Trained models (too large for GitHub)
-models/*.pkl
-models/*.h5
-models/*.json
+# models/*.pkl
+# models/*.h5
+# models/*.json
 
 # Logs
 logs/
