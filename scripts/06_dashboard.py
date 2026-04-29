@@ -159,12 +159,12 @@ def get_failure_prediction(temp, door_open, hour, day_of_week):
 def get_temperature_forecast_lstm(history_temps):
     """
     Use LSTM model to forecast future temperatures
-    Requires 12 historical readings (1 hour of data at 5-min intervals)
+    Uses padding when less than 12 readings are available
     """
     current = history_temps[-1] if history_temps else 5.0
     
-    if lstm_model is None or len(history_temps) < 12:
-        # Fallback: simple random forecast (still realistic)
+    # Fallback mode: only for very first readings (less than 3)
+    if lstm_model is None or len(history_temps) < 3:
         return {
             "current": round(current, 1),
             "30min": round(current + np.random.uniform(-0.3, 0.3), 1),
@@ -174,8 +174,18 @@ def get_temperature_forecast_lstm(history_temps):
             "using_lstm": False
         }
     
-    # Prepare sequence for LSTM (last 12 readings)
-    last_12 = history_temps[-12:]
+    # ============================================================
+    # PADDING LOGIC: Ensure we always have 12 readings for LSTM
+    # ============================================================
+    if len(history_temps) < 12:
+        # Pad with the first value repeated to make 12 readings
+        padding = [history_temps[0]] * (12 - len(history_temps))
+        last_12 = padding + history_temps[-len(history_temps):]
+        # Debug info (can be removed after testing)
+        st.sidebar.markdown(f"📊 LSTM: Using {len(history_temps)} readings + {12 - len(history_temps)} padding")
+    else:
+        last_12 = history_temps[-12:]
+    
     # Reshape for LSTM: (1, 12, 1)
     sequence = np.array(last_12).reshape(1, 12, 1)
     
@@ -183,15 +193,10 @@ def get_temperature_forecast_lstm(history_temps):
     next_temp = float(lstm_model.predict(sequence, verbose=0)[0, 0])
     
     # Calculate forecast values (30min, 1hr, 2hr, 3hr)
-    # 30min: halfway between current and next_temp
     forecast_30min = round(current + (next_temp - current) * 0.5, 1)
-    # 1hr: direct LSTM prediction
     forecast_1hour = round(next_temp, 1)
-    # 2hr: extrapolate trend
-    trend = next_temp - current
-    forecast_2hour = round(next_temp + trend, 1)
-    # 3hr: extrapolate further
-    forecast_3hour = round(next_temp + trend * 2, 1)
+    forecast_2hour = round(next_temp + (next_temp - current) * 0.5, 1)
+    forecast_3hour = round(next_temp + (next_temp - current) * 1.0, 1)
     
     return {
         "current": round(current, 1),
@@ -512,9 +517,9 @@ elif page == "🌡️ Temperature Forecast":
     st.subheader("🌡️ Temperature Forecast")
     
     if forecast.get('using_lstm', False):
-        st.markdown(f"*Using LSTM Neural Network (MAE: {lstm_metrics.get('mae', 0):.3f}°C)*")
+        st.markdown(f"*✅ Using LSTM Neural Network (MAE: {lstm_metrics.get('mae', 0):.3f}°C)*")
     else:
-        st.markdown("*Using simulation mode (LSTM model loading...)*")
+        st.markdown("*📊 Waiting for temperature history (need 3+ readings)...*")
     
     col1, col2, col3, col4, col5 = st.columns(5)
     col1.metric("Current", f"{forecast['current']}°C")
@@ -537,9 +542,9 @@ elif page == "🌡️ Temperature Forecast":
     
     if forecast.get('using_lstm', False) and lstm_metrics:
         st.caption(f"📊 LSTM Model Performance: MAE = {lstm_metrics.get('mae', 0):.3f}°C (Target: <1.0°C)")
-        st.info("The LSTM model uses the last 12 temperature readings (1 hour of history) to predict future temperatures.")
+        st.info("💡 The LSTM model uses the last 12 temperature readings to predict future temperatures. Padding is used when less than 12 readings are available.")
     else:
-        st.info("📊 LSTM model will be used for forecasts once sufficient data is collected (need 12 readings).")
+        st.info("📊 The dashboard is collecting temperature history. After 3 readings, the LSTM model will activate and provide forecasts.")
 
 # ============================================================
 # PAGE 7: EXPLORATORY DATA ANALYSIS (EDA)
