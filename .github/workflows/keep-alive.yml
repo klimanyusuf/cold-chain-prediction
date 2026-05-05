@@ -1,4 +1,4 @@
-﻿name: Keep Streamlit App Alive
+name: Keep Streamlit App Awake
 
 on:
   schedule:
@@ -7,13 +7,46 @@ on:
   workflow_dispatch:
 
 jobs:
-  ping-app:
+  wake-app:
     runs-on: ubuntu-latest
-    timeout-minutes: 2
+    timeout-minutes: 10
     steps:
-      - name: Send keep-alive request
+      - uses: actions/checkout@v4
+      
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      
+      - name: Install Playwright
         run: |
-          echo "Keeping dashboard alive at 04/27/2026 21:43:04"
-          curl -s -o /dev/null -w "Status: %{http_code}\n" \
-            --max-time 30 \
-            https://cold-chain-prediction.streamlit.app/
+          pip install playwright
+          playwright install chromium --with-deps
+      
+      - name: Wake Streamlit App
+        run: |
+          python -c "
+          import time
+          from playwright.sync_api import sync_playwright
+          
+          URL = 'https://cold-chain-prediction.streamlit.app'
+          print(f'Visiting {URL}...')
+          
+          with sync_playwright() as p:
+              browser = p.chromium.launch(headless=True)
+              page = browser.new_page()
+              page.goto(URL, timeout=120000)
+              time.sleep(8)
+              
+              # Check for Streamlit's wake button
+              wake_button = page.get_by_role('button', name='Yes, get this app back up!')
+              if wake_button.count() > 0:
+                  print('⚠️ App was asleep. Clicking wake button...')
+                  wake_button.click()
+                  time.sleep(10)
+                  print('✅ App woken up successfully')
+              else:
+                  print('✅ App was already awake')
+              
+              browser.close()
+          "
